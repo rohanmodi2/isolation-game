@@ -11,7 +11,7 @@ import SwiftUI
 struct IsolationGameApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
         }
     }
 }

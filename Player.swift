@@ -1,8 +1,15 @@
-//
-//  Player.swift
-//  IsolationGame
-//
-//  Created by Rohan Modi on 5/23/23.
-//
-
 import Foundation
+
+class Player: ObservableObject {
+    var disp = String()
+    var lastPosition = [Int]()
+    var numberMoves = 0
+    var curPos = [-1, -1]
+    
+    /**
+     * Initializes Player object with disp = name.
+     */
+    init(name: String) {
+        disp = name
+    }
+}
