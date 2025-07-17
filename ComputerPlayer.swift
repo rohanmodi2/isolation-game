@@ -6,7 +6,7 @@ import Foundation
  */
 func score(board: Board, player: Player) -> Int {
     var otherPlayer = board.player1
-    if player.disp == "1" { otherPlayer = board.player2 }
+    if player.disp == "U" { otherPlayer = board.player2 }
     return board.allowedMoves(playerTurn: player).count - board.allowedMoves(playerTurn: otherPlayer).count
 }
 
@@ -20,7 +20,7 @@ class CustomPlayer {
     
     /**
      * Returns best move returned by alphabeta() based on given board, such that
-     * computerPlayer is player "2" and user is player "1".
+     * computerPlayer is player "A" and user is player "U".
      */
     func move(board: Board) -> [Int] {
         let date = Date()

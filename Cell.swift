@@ -40,10 +40,10 @@ class Cell {
     func displayColor(row: Int, col: Int) -> Color {
         if currentPlayer.disp == "" { return Color.white }
         if isActive {
-            if currentPlayer.disp == "1" { return Color.red }
-            if currentPlayer.disp == "2" { return Color.blue }
+            if currentPlayer.disp == "U" { return Color.red }
+            if currentPlayer.disp == "A" { return Color.blue }
         } else {
-            if currentPlayer.disp == "1" || currentPlayer.disp == "2" { return Color.black }
+            if currentPlayer.disp == "U" || currentPlayer.disp == "A" { return Color.black }
         }
         return Color.green
     }

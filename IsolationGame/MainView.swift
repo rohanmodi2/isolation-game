@@ -11,7 +11,7 @@ struct MainView: View {
     @State var buttonColors = [Color.blue, Color.blue, Color.blue, Color.blue, Color.blue, Color.blue]
     @State var startGame = false;
     @State var size = 3;
-    var difficultyLevel = [1, 2, 3]
+    var difficultyLevel = [1, 2, 3, 4, 5]
     @State private var difficulty = 1
 
 

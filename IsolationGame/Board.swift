@@ -3,9 +3,9 @@ import SwiftUI
 
 class Board: ObservableObject {
     @Published var content = [[Cell]]()
-    @Published var player1 = Player(name: "1")
-    @Published var player2 = Player(name: "2")
-    @Published var turn = "1"
+    @Published var player1 = Player(name: "U")
+    @Published var player2 = Player(name: "A")
+    @Published var turn = "U"
     @Published var allowedMovesList = [[Int]]()
     @Published var shouldComputerPlay = true
     @Published var size: Int
@@ -27,8 +27,11 @@ class Board: ObservableObject {
      * sets content to new array with every cell empty.
      */
     func createEmptyBoard(difficulty: Int) {
-        turn = "1"
+        turn = "U"
         content = [[Cell]]()
+        player1 = Player(name: "U")
+        player2 = Player(name: "A")
+        
         for _ in 0...(size-1) {
             var row = [Cell]()
             for _ in 0...(size-1) {
@@ -36,7 +39,9 @@ class Board: ObservableObject {
             }
             content.append(row)
         }
+        allowedMovesList = allowedMoves(playerTurn: player1)
     }
+
     
     /**
      * Checks if it is player 2's turn and if the program
@@ -45,7 +50,7 @@ class Board: ObservableObject {
      * to decide a move for player 2.
      */
     func checkComputerPlayerTurn() {
-        if turn == "2" && shouldComputerPlay {
+        if turn == "A" && shouldComputerPlay {
             let computerPlayer = CustomPlayer(computerPlayer: player2)
             let move = computerPlayer.move(board: self)
             if move[0] >= 0 && move[1] >= 0 {
@@ -73,96 +78,63 @@ class Board: ObservableObject {
      * current player and sets cell.visited to true if move is allowed.
      */
     func setCell(row: Int, col: Int) {
-        if content[row][col].visited {
-            return
-        }
-        var player: Player
-        player = player1
-        if turn == "2" { player = player2 }
+        if content[row][col].visited { return }
+        
+        var player = turn == "U" ? player1 : player2
         var allowedMove = false
-        if allowedMovesList.count > 0 {
+        if !allowedMovesList.isEmpty {
             allowedMove = updateCells(row: row, col: col)
         }
         if player.numberMoves > 0 && !allowedMove { return }
+        
+        // Update board immediately
         content[row][col] = Cell(newPlayer: turn)
         content[row][col].visited = true
+        
         if player.numberMoves > 0 {
             content[player.lastPosition[0]][player.lastPosition[1]].isActive = false
         }
-        if player.numberMoves > 0 && row == player.lastPosition[0] && col < player.lastPosition[1] {
-            for i in col...player.lastPosition[1] {
-                content[row][i] = Cell(newPlayer: turn)
-                content[row][i].visited = true
-            }
-        }
-        if player.numberMoves > 0 && row == player.lastPosition[0] && col > player.lastPosition[1] {
-            for i in player.lastPosition[1]...col {
-                content[row][i] = Cell(newPlayer: turn)
-                content[row][i].visited = true
-            }
-        }
-        if player.numberMoves > 0 && col == player.lastPosition[1] && row < player.lastPosition[0] {
-            for i in row...player.lastPosition[0] {
-                content[i][col] = Cell(newPlayer: turn)
-                content[i][col].visited = true
-            }
-        }
-        if player.numberMoves > 0 && col == player.lastPosition[1] && row > player.lastPosition[0] {
-            for i in player.lastPosition[0]...row {
-                content[i][col] = Cell(newPlayer: turn)
-                content[i][col].visited = true
-            }
-        }
-        if player.numberMoves > 0 && row > player.lastPosition[0] && col > player.lastPosition[1] {
-            var i = player.lastPosition[0] + 1
-            var j = player.lastPosition[1] + 1
-            while i <= row && j <= col {
-                content[i][j] = Cell(newPlayer: turn)
-                content[i][j].visited = true
-                i += 1
-                j += 1
-            }
-        }
-        if player.numberMoves > 0 && row < player.lastPosition[0] && col > player.lastPosition[1] {
-            var i = player.lastPosition[0] - 1
-            var j = player.lastPosition[1] + 1
-            while i >= row && j <= col {
-                content[i][j] = Cell(newPlayer: turn)
-                content[i][j].visited = true
-                i -= 1
-                j += 1
-            }
-        }
-        if player.numberMoves > 0 && row < player.lastPosition[0] && col < player.lastPosition[1] {
-            var i = player.lastPosition[0] - 1
-            var j = player.lastPosition[1] - 1
-            while i >= row && j >= col {
-                content[i][j] = Cell(newPlayer: turn)
-                content[i][j].visited = true
-                i -= 1
-                j -= 1
-            }
-        }
-        if player.numberMoves > 0 && row > player.lastPosition[0] && col < player.lastPosition[1] {
-            var i = player.lastPosition[0] + 1
-            var j = player.lastPosition[1] - 1
-            while i <= row && j >= col {
-                content[i][j] = Cell(newPlayer: turn)
-                content[i][j].visited = true
-                i += 1
-                j -= 1
-            }
-        }
+        
+        // Existing logic to fill cells based on move...
+        fillCellsBetween(player: player, row: row, col: col)
+        
         content[row][col].isActive = true
-
         player.lastPosition = [row, col]
-        turn = turn == "1" ? "2" : "1"
         player.numberMoves += 1
-        player = player1
-        if turn == "2" { player = player2 }
+        
+        turn = turn == "U" ? "A" : "U"
+        player = turn == "U" ? player1 : player2
         allowedMovesList = allowedMoves(playerTurn: player)
-        checkComputerPlayerTurn()
+        
+        // Delay the AI's move slightly to allow SwiftUI to update the player's move first
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.checkComputerPlayerTurn()
+        }
     }
+
+    func fillCellsBetween(player: Player, row: Int, col: Int) {
+        if player.numberMoves == 0 { return }
+        
+        let lastRow = player.lastPosition[0]
+        let lastCol = player.lastPosition[1]
+        
+        var dRow = (row - lastRow).signum()
+        var dCol = (col - lastCol).signum()
+        
+        var i = lastRow
+        var j = lastCol
+        
+        while i != row || j != col {
+            content[i][j] = Cell(newPlayer: turn)
+            content[i][j].visited = true
+            i += dRow
+            j += dCol
+        }
+        // Ensure final cell is set
+        content[row][col] = Cell(newPlayer: turn)
+        content[row][col].visited = true
+    }
+
     
     /**
      * Checks if either player 1 or player 2 has no moves left. If either
@@ -170,7 +142,7 @@ class Board: ObservableObject {
      */
     func checkVictory() -> Bool {
         var player = player1
-        if turn == "2" { player = player2 }
+        if turn == "A" { player = player2 }
         if player.numberMoves == 0 { return false }
         let row = player.lastPosition[0]
         let col = player.lastPosition[1]
@@ -193,7 +165,7 @@ class Board: ObservableObject {
         var moves = [[Int]]()
         var player: Player
         player = player1
-        if playerTurn.disp == "2" { player = player2 }
+        if playerTurn.disp == "A" { player = player2 }
         if player.numberMoves == 0 {
             for i in 0...(size-1) {
                 for j in 0...(size-1) {

@@ -29,8 +29,9 @@ struct ContentView: View {
                             .aspectRatio(1, contentMode: .fit)
                             .background(board.content[row][col].displayColor(row: row, col: col))
                             .onTapGesture {
-                                board
-                                    .setCell(row: row, col: col)
+                                if board.turn == "U" {
+                                        board.setCell(row: row, col: col)
+                                    }
                             }
                         }
                     }
@@ -39,7 +40,7 @@ struct ContentView: View {
             .background(Color.black)
             .padding()
             VStack {
-                Button(board.checkVictory() ? (board.turn == "1" ? "Player 2 Wins!" : "Player 1 Wins!") : "Turn: " + (board.turn == "1" ? "Player 1" : "Player 2")) {
+                Button(board.checkVictory() ? (board.turn == "U" ? "AI Player Wins!" : "You Win!") : (board.turn == "U" ? "Your Turn" : "AI Player's Turn")) {
                         board.checkComputerPlayerTurn();
                 }
             }
